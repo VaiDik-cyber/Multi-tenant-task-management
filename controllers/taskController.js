@@ -25,8 +25,8 @@ exports.create = async (req, res) => {
         }
 
         const [result] = await connection.query(
-            'INSERT INTO tasks (organization_id, project_id, title, description, priority, assignee_id) VALUES (?, ?, ?, ?, ?, ?)',
-            [organizationId, projectId, title, description, priority || 'medium', assigneeId || null]
+            'INSERT INTO tasks (organization_id, project_id, title, description, priority, assignee_id, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [organizationId, projectId, title, description, priority || 'medium', assigneeId || null, req.body.dueDate || null]
         );
 
         const newTaskId = result.insertId;
@@ -151,6 +151,8 @@ exports.updateStatus = async (req, res) => {
 
         if (status === 'done') {
             query += ', completed_at = NOW()';
+        } else {
+            query += ', completed_at = NULL';
         }
 
         query += ' WHERE id = ? AND organization_id = ? AND version = ?';
@@ -202,6 +204,59 @@ exports.updateStatus = async (req, res) => {
         await connection.rollback();
         console.error('Update Task Status Error:', error);
         res.status(500).json({ error: 'Failed to update task status' });
+    } finally {
+        connection.release();
+    }
+};
+
+exports.update = async (req, res) => {
+    const { id } = req.params;
+    const { title, description, priority, assigneeId, dueDate } = req.body;
+    const { organizationId } = req.user;
+
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        // Check if task exists and belongs to organization
+        const [existing] = await connection.query(
+            'SELECT id FROM tasks WHERE id = ? AND organization_id = ? AND deleted_at IS NULL',
+            [id, organizationId]
+        );
+
+        if (existing.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        // Update Task
+        await connection.query(
+            'UPDATE tasks SET title = ?, description = ?, priority = ?, assignee_id = ?, due_date = ? WHERE id = ?',
+            [title, description, priority, assigneeId, dueDate || null, id]
+        );
+
+        // Log Activity
+        await connection.query(
+            'INSERT INTO activity_logs (organization_id, user_id, entity_type, entity_id, action, details) VALUES (?, ?, ?, ?, ?, ?)',
+            [organizationId, req.user.userId, 'task', id, 'updated', JSON.stringify({ title, priority, assigneeId, dueDate })]
+        );
+
+        await connection.commit();
+
+        res.json({
+            id,
+            title,
+            description,
+            priority,
+            assigneeId,
+            dueDate
+        });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Update Task Error:', error);
+        res.status(500).json({ error: 'Failed to update task' });
     } finally {
         connection.release();
     }

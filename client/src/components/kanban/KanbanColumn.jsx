@@ -1,7 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import KanbanTask from './KanbanTask';
 
-const KanbanColumn = ({ id, title, tasks }) => {
+const KanbanColumn = ({ id, title, tasks, onDeleteTask }) => {
     const { setNodeRef } = useDroppable({
         id: id,
     });
@@ -51,7 +51,7 @@ const KanbanColumn = ({ id, title, tasks }) => {
                 }}
             >
                 {tasks.map((task) => (
-                    <KanbanTask key={task.id} task={task} />
+                    <KanbanTask key={task.id} task={task} onDelete={onDeleteTask} />
                 ))}
 
                 {tasks.length === 0 && (

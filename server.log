@@ -1,0 +1,11 @@
+[dotenv@17.2.3] injecting env (6) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+Server is running on port 3000
+Fetching analytics for org: 1
+Fetching analytics for org: 1
+Fetching analytics for org: 1
+Fetching analytics for org: 1
+Fetching analytics for org: 1
+Fetching analytics for org: 1
+Fetching analytics for org: 1
+Fetching analytics for org: 1

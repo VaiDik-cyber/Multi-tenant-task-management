@@ -88,6 +88,11 @@ exports.delete = async (req, res) => {
     const { id } = req.params;
     const { organizationId } = req.user;
 
+    // RBAC: Only admins can delete tasks
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied. Only admins can delete tasks.' });
+    }
+
     const connection = await db.getConnection();
 
     try {
@@ -151,18 +156,29 @@ exports.updateStatus = async (req, res) => {
         query += ' WHERE id = ? AND organization_id = ? AND version = ?';
         params.push(id, organizationId, version);
 
+        // RBAC: Members can only update their own tasks
+        if (req.user.role !== 'admin') {
+            query += ' AND assignee_id = ?';
+            params.push(userId);
+        }
+
         const [result] = await connection.query(query, params);
 
         if (result.affectedRows === 0) {
             await connection.rollback();
-            // Check if task exists to distinguish between 404 (not found) and 409 (conflict)
+            // Check if task exists to distinguish between 404 (not found), 403 (access denied), and 409 (conflict)
             const [task] = await connection.query(
-                'SELECT version FROM tasks WHERE id = ? AND organization_id = ?',
+                'SELECT version, assignee_id FROM tasks WHERE id = ? AND organization_id = ?',
                 [id, organizationId]
             );
 
             if (task.length === 0) {
                 return res.status(404).json({ error: 'Task not found' });
+            }
+
+            // If user is not admin and not assignee
+            if (req.user.role !== 'admin' && task[0].assignee_id !== userId) {
+                return res.status(403).json({ error: 'Access denied. You can only update tasks assigned to you.' });
             }
 
             return res.status(409).json({ error: 'Task has been modified by another user. Please refresh and try again.' });

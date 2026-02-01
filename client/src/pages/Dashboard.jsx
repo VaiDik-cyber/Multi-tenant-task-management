@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import Sidebar from '../components/layout/Sidebar';
 import Card from '../components/ui/Card';
-import KanbanBoard from '../components/kanban/KanbanBoard';
 import api from '../api/axios';
 import { Layers, Clock, CheckCircle, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -10,11 +9,11 @@ import { motion } from 'framer-motion';
 const StatCard = ({ icon: Icon, label, value, color, delay }) => (
     <Card delay={delay} style={{
         background: 'var(--bg-card)',
-        backdropFilter: 'var(--backdrop-blur)',
-        border: 'var(--glass-border)',
-        borderRadius: '20px',
+        border: 'var(--border-subtle)',
+        borderRadius: 'var(--radius-lg)',
         padding: '24px',
-        display: 'flex', alignItems: 'center', gap: '20px'
+        display: 'flex', alignItems: 'center', gap: '20px',
+        boxShadow: 'var(--shadow-sm)'
     }}>
         <div style={{
             width: '56px', height: '56px',
@@ -36,6 +35,10 @@ const Dashboard = () => {
     const { user } = useSelector((state) => state.auth);
     const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+
+    // Task Form State
+    const [newTask, setNewTask] = useState({ title: '', description: '', priority: 'medium' });
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -51,12 +54,28 @@ const Dashboard = () => {
         fetchAnalytics();
     }, []);
 
+    const handleCreateTask = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/tasks', {
+                ...newTask,
+                projectId: 1, // Default
+                assigneeId: user?.id
+            });
+            setIsTaskModalOpen(false);
+            setNewTask({ title: '', description: '', priority: 'medium' });
+            window.location.reload(); // Refresh to show new task
+        } catch (error) {
+            alert('Failed to create task');
+        }
+    };
+
     return (
         <div style={{ display: 'flex', minHeight: '100vh' }}>
             <Sidebar />
             <main style={{ marginLeft: '260px', flex: 1, padding: '40px' }}>
 
-                {/* Header */}
+                {/* Header ... (Same) */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -81,21 +100,21 @@ const Dashboard = () => {
                         icon={CheckCircle}
                         label="Total Completed"
                         value={analytics?.tasksCompletedPerUser?.[0]?.completed_count || 0}
-                        color="16, 185, 129" // Emerald
+                        color="16, 185, 129"
                         delay={0.1}
                     />
                     <StatCard
                         icon={Clock}
                         label="Avg Completion (Hrs)"
                         value={parseFloat(analytics?.avgCompletionTime || 0).toFixed(1)}
-                        color="99, 102, 241" // Indigo
+                        color="99, 102, 241"
                         delay={0.2}
                     />
                     <StatCard
                         icon={Layers}
                         label="Overdue Tasks"
                         value={analytics?.overdueTasksCount || 0}
-                        color="239, 68, 68" // Red
+                        color="239, 68, 68"
                         delay={0.3}
                     />
                 </div>
@@ -110,12 +129,6 @@ const Dashboard = () => {
                         Chart visualization would go here
                     </div>
                 </Card>
-
-                {/* Kanban Board Section */}
-                <div style={{ marginTop: '40px' }}>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '20px', fontFamily: 'var(--font-display)' }}>Task Board</h3>
-                    <KanbanBoard />
-                </div>
 
             </main>
         </div>

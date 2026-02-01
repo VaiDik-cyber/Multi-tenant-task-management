@@ -14,38 +14,58 @@ const KanbanColumn = ({ id, title, tasks }) => {
     };
 
     return (
-        <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, minWidth: '320px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Header */}
             <div style={{
-                display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px',
-                padding: '0 4px'
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '16px 4px', marginBottom: '8px'
             }}>
-                <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: columnColors[id] || '#6366f1' }} />
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'var(--font-display)' }}>{title}</h3>
-                <span style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    padding: '2px 8px', borderRadius: '12px',
-                    fontSize: '0.75rem', color: 'var(--text-muted)'
-                }}>
-                    {tasks.length}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {/* <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: columnColors[id] || '#6366f1' }} /> */}
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{title}</h3>
+                    <span style={{
+                        background: 'var(--bg-hover)',
+                        padding: '2px 8px', borderRadius: '12px',
+                        fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)'
+                    }}>
+                        {tasks.length}
+                    </span>
+                </div>
             </div>
 
+            {/* Droppable Area */}
             <div
                 ref={setNodeRef}
                 style={{
-                    background: 'rgba(0,0,0,0.2)',
-                    borderRadius: '16px',
-                    padding: '16px',
+                    background: '#f1f5f9', // Slate 100 - Distinct contrast
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '12px',
                     flex: 1,
-                    minHeight: '200px'
+                    minHeight: '150px',
+                    border: '1px solid var(--border-subtle)',
+                    borderTop: `3px solid ${columnColors[id] || '#6366f1'}`, // Colored indicator
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px', // Consistent spacing between cards
+                    overflowY: 'auto'
                 }}
             >
                 {tasks.map((task) => (
                     <KanbanTask key={task.id} task={task} />
                 ))}
+
                 {tasks.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '20px', color: 'rgba(255,255,255,0.1)', fontSize: '0.9rem', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
-                        Drop here
+                    <div style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--text-muted)',
+                        fontSize: '0.85rem',
+                        fontStyle: 'italic',
+                        opacity: 0.7
+                    }}>
+                        No tasks
                     </div>
                 )}
             </div>

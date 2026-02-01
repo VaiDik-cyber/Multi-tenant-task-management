@@ -18,10 +18,10 @@ export const fetchTasks = createAsyncThunk(
 // Async thunk to update (persist) status
 export const updateTaskStatus = createAsyncThunk(
     'tasks/updateTaskStatus',
-    async ({ taskId, status, previousStatus }, { rejectWithValue }) => {
+    async ({ taskId, status, previousStatus, version }, { rejectWithValue }) => {
         try {
-            await api.put(`/tasks/${taskId}/status`, { status });
-            return { taskId, status };
+            const response = await api.put(`/tasks/${taskId}/status`, { status, version });
+            return { taskId, status, version: response.data.version }; // Update with new version from server
         } catch (error) {
             // Return necessary info to rollback
             return rejectWithValue({ taskId, previousStatus, error: error.response?.data?.error || 'Update failed' });
@@ -57,6 +57,13 @@ const tasksSlice = createSlice({
     extraReducers: (builder) => {
         builder
             // Fetch Tasks
+            .addCase(updateTaskStatus.fulfilled, (state, action) => {
+                const { taskId, version } = action.payload;
+                const task = state.items.find((t) => t.id === taskId);
+                if (task) {
+                    task.version = version; // Sync version from server
+                }
+            })
             .addCase(fetchTasks.pending, (state) => {
                 state.status = 'loading';
             })

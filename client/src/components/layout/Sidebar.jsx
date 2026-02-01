@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion';
-import { LayoutDashboard, CheckSquare, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../../features/auth/authSlice';
 
 const Sidebar = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = () => {
         dispatch(logout());
@@ -14,65 +15,91 @@ const Sidebar = () => {
     };
 
     const menuItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', active: true },
-        { icon: CheckSquare, label: 'Tasks', active: false },
-        { icon: Settings, label: 'Settings', active: false },
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+        { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
     ];
 
     return (
         <div style={{
             width: '260px',
-            background: 'rgba(15, 16, 22, 0.8)',
-            backdropFilter: 'blur(10px)',
-            borderRight: 'var(--glass-border)',
+            background: 'var(--bg-sidebar)',
+            borderRight: 'var(--border-subtle)',
             height: '100vh',
-            padding: '30px 20px',
+            padding: '24px 20px',
             display: 'flex',
             flexDirection: 'column',
             position: 'fixed',
-            left: 0, top: 0
+            left: 0, top: 0,
+            zIndex: 50
         }}>
-            <div style={{ padding: '0 10px 40px' }}>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 700 }}>
-                    Task<span style={{ color: 'var(--primary)' }}>Flow</span>
+            <div style={{ padding: '0 12px 32px' }}>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '24px', height: '24px', background: 'var(--primary)', borderRadius: '6px' }}></div>
+                    TaskFlow
                 </h2>
             </div>
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {menuItems.map((item, index) => (
-                    <div
-                        key={index}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '12px 16px',
-                            borderRadius: '12px',
-                            background: item.active ? 'linear-gradient(90deg, rgba(99, 102, 241, 0.1), transparent)' : 'transparent',
-                            borderLeft: item.active ? '3px solid var(--primary)' : '3px solid transparent',
-                            color: item.active ? 'var(--text-main)' : 'var(--text-muted)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        <item.icon size={20} color={item.active ? 'var(--primary)' : 'currentColor'} />
-                        <span style={{ fontWeight: 500 }}>{item.label}</span>
-                    </div>
-                ))}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {menuItems.map((item, index) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                        <div
+                            key={index}
+                            onClick={() => navigate(item.path)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                padding: '10px 12px',
+                                borderRadius: 'var(--radius-md)',
+                                background: isActive ? 'var(--primary-light)' : 'transparent',
+                                color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+                                fontWeight: isActive ? 600 : 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                            }}
+                            onMouseOver={(e) => {
+                                if (!isActive) {
+                                    e.currentTarget.style.background = 'var(--bg-hover)';
+                                    e.currentTarget.style.color = 'var(--text-main)';
+                                }
+                            }}
+                            onMouseOut={(e) => {
+                                if (!isActive) {
+                                    e.currentTarget.style.background = 'transparent';
+                                    e.currentTarget.style.color = 'var(--text-secondary)';
+                                }
+                            }}
+                        >
+                            <item.icon size={18} />
+                            <span style={{ fontSize: '0.9rem' }}>{item.label}</span>
+                        </div>
+                    );
+                })}
             </div>
 
             <div
                 onClick={handleLogout}
                 style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '12px 16px',
-                    color: 'var(--danger)',
+                    padding: '10px 12px',
+                    color: 'var(--text-secondary)',
                     cursor: 'pointer',
-                    marginTop: 'auto'
+                    marginTop: 'auto',
+                    borderRadius: 'var(--radius-md)',
+                    transition: 'all 0.15s ease'
+                }}
+                onMouseOver={(e) => {
+                    e.currentTarget.style.background = '#fef2f2';
+                    e.currentTarget.style.color = 'var(--danger)';
+                }}
+                onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
                 }}
             >
-                <LogOut size={20} />
-                <span style={{ fontWeight: 500 }}>Logout</span>
+                <LogOut size={18} />
+                <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Logout</span>
             </div>
         </div>
     );

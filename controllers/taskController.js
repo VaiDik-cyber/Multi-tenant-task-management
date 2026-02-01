@@ -8,24 +8,39 @@ exports.create = async (req, res) => {
         return res.status(400).json({ error: 'Project ID and Title are required' });
     }
 
+    const connection = await db.getConnection();
+
     try {
+        await connection.beginTransaction();
+
         // Verify project belongs to organization
-        const [project] = await db.query(
+        const [project] = await connection.query(
             'SELECT id FROM projects WHERE id = ? AND organization_id = ? AND deleted_at IS NULL',
             [projectId, organizationId]
         );
 
         if (project.length === 0) {
+            await connection.rollback();
             return res.status(400).json({ error: 'Invalid Project ID' });
         }
 
-        const [result] = await db.query(
+        const [result] = await connection.query(
             'INSERT INTO tasks (organization_id, project_id, title, description, priority, assignee_id) VALUES (?, ?, ?, ?, ?, ?)',
             [organizationId, projectId, title, description, priority || 'medium', assigneeId || null]
         );
 
+        const newTaskId = result.insertId;
+
+        // Log Activity
+        await connection.query(
+            'INSERT INTO activity_logs (organization_id, user_id, entity_type, entity_id, action, details) VALUES (?, ?, ?, ?, ?, ?)',
+            [organizationId, req.user.userId, 'task', newTaskId, 'created', JSON.stringify({ title, projectId })]
+        );
+
+        await connection.commit();
+
         res.status(201).json({
-            id: result.insertId,
+            id: newTaskId,
             projectId,
             title,
             description,
@@ -34,8 +49,11 @@ exports.create = async (req, res) => {
             version: 1
         });
     } catch (error) {
+        await connection.rollback();
         console.error('Create Task Error:', error);
         res.status(500).json({ error: 'Failed to create task' });
+    } finally {
+        connection.release();
     }
 };
 
@@ -70,20 +88,36 @@ exports.delete = async (req, res) => {
     const { id } = req.params;
     const { organizationId } = req.user;
 
+    const connection = await db.getConnection();
+
     try {
-        const [result] = await db.query(
+        await connection.beginTransaction();
+
+        const [result] = await connection.query(
             'UPDATE tasks SET deleted_at = NOW() WHERE id = ? AND organization_id = ?',
             [id, organizationId]
         );
 
         if (result.affectedRows === 0) {
+            await connection.rollback();
             return res.status(404).json({ error: 'Task not found or access denied' });
         }
 
+        // Log Activity
+        await connection.query(
+            'INSERT INTO activity_logs (organization_id, user_id, entity_type, entity_id, action, details) VALUES (?, ?, ?, ?, ?, ?)',
+            [organizationId, req.user.userId, 'task', id, 'deleted', JSON.stringify({ deletedAt: new Date() })]
+        );
+
+        await connection.commit();
+
         res.json({ message: 'Task deleted successfully' });
     } catch (error) {
+        await connection.rollback();
         console.error('Delete Task Error:', error);
         res.status(500).json({ error: 'Failed to delete task' });
+    } finally {
+        connection.release();
     }
 };
 

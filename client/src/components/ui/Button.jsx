@@ -18,14 +18,15 @@ const Button = ({ children, variant = 'primary', className, ...props }) => {
 
     const variants = {
         primary: {
-            background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+            background: 'var(--primary)',
             color: 'white',
-            boxShadow: '0 4px 15px var(--primary-glow)',
+            boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1)', // Colored shadow
+            border: '1px solid var(--primary)', // Ensure crisp edges
         },
         ghost: {
             background: 'transparent',
-            color: 'var(--text-muted)',
-            border: '1px solid var(--glass-border)',
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--border-subtle)',
         },
         danger: {
             background: 'var(--danger)',
@@ -35,8 +36,8 @@ const Button = ({ children, variant = 'primary', className, ...props }) => {
 
     return (
         <motion.button
-            whileHover={{ scale: 1.02, boxShadow: '0 8px 25px var(--primary-glow)' }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.01, filter: 'brightness(1.05)' }}
+            whileTap={{ scale: 0.98 }}
             style={{ ...baseStyles, ...variants[variant] }}
             className={className}
             {...props}

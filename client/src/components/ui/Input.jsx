@@ -14,20 +14,20 @@ const Input = ({ label, type = 'text', ...props }) => {
             </label>
             <motion.input
                 whileFocus={{
-                    scale: 1.01,
                     borderColor: 'var(--primary)',
-                    backgroundColor: 'rgba(255,255,255,0.05)'
+                    boxShadow: '0 0 0 2px var(--primary-light)'
                 }}
                 style={{
                     width: '100%',
                     padding: '12px 16px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--bg-card)',
+                    border: 'var(--border-subtle)',
                     color: 'var(--text-main)',
                     fontSize: '1rem',
                     outline: 'none',
-                    transition: 'border-color 0.3s'
+                    transition: 'all 0.2s',
+                    fontFamily: 'inherit'
                 }}
                 type={type}
                 {...props}

@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     INDEX idx_tasks_org (organization_id),
     INDEX idx_tasks_project (project_id),
     INDEX idx_tasks_status (status),
+    INDEX idx_tasks_due_date (due_date),
     INDEX idx_tasks_deleted (deleted_at)
 );
 

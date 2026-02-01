@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTasks, moveTaskOptimistic, updateTaskStatus, rollbackTaskMove } from '../../features/tasks/tasksSlice';
-import { DndContext, closestCorners, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCorners, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import KanbanColumn from './KanbanColumn';
+import KanbanTask from './KanbanTask';
 import { Toaster } from 'react-hot-toast';
 
 const KanbanBoard = () => {
@@ -21,8 +22,17 @@ const KanbanBoard = () => {
         })
     );
 
+    const [activeTask, setActiveTask] = useState(null);
+
+    const handleDragStart = (event) => {
+        const { active } = event;
+        const task = tasks.find(t => t.id === parseInt(active.id));
+        setActiveTask(task);
+    };
+
     const handleDragEnd = (event) => {
         const { active, over } = event;
+        setActiveTask(null);
 
         if (!over) return;
 
@@ -39,7 +49,7 @@ const KanbanBoard = () => {
         dispatch(moveTaskOptimistic({ taskId, newStatus }));
 
         // 2. API Call with Revert capability
-        dispatch(updateTaskStatus({ taskId, status: newStatus, previousStatus }));
+        dispatch(updateTaskStatus({ taskId, status: newStatus, previousStatus, version: task.version }));
     };
 
     const columns = [
@@ -53,14 +63,16 @@ const KanbanBoard = () => {
         <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
             <div style={{
                 display: 'flex',
                 gap: '24px',
                 overflowX: 'auto',
-                paddingBottom: '20px',
-                height: 'calc(100vh - 120px)' // Adjust based on header
+                flex: 1, // Take remaining vertical space
+                minHeight: 0, // Allow shrinking for scroll
+                paddingBottom: '20px'
             }}>
                 {columns.map((col) => (
                     <KanbanColumn
@@ -71,6 +83,11 @@ const KanbanBoard = () => {
                     />
                 ))}
             </div>
+
+            <DragOverlay>
+                {activeTask ? <KanbanTask task={activeTask} isOverlay /> : null}
+            </DragOverlay>
+
             <Toaster position="bottom-right" toastOptions={{
                 style: {
                     background: '#333',

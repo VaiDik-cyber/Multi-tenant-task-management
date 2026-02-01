@@ -8,11 +8,10 @@ const Card = ({ children, delay = 0, className, ...props }) => {
             transition={{ duration: 0.5, delay }}
             style={{
                 background: 'var(--bg-card)',
-                backdropFilter: 'var(--backdrop-blur)',
-                border: 'var(--glass-border)',
-                borderRadius: '20px',
+                border: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-lg)',
                 padding: '24px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                boxShadow: 'var(--shadow-sm)',
             }}
             className={className}
             {...props}

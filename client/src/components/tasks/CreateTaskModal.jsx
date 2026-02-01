@@ -1,15 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 
 const CreateTaskModal = ({ isOpen, onClose, user, onTaskCreated }) => {
     const [newTask, setNewTask] = useState({ title: '', description: '', priority: 'medium', dueDate: '' });
+    const [projects, setProjects] = useState([]);
+    const [selectedProjectId, setSelectedProjectId] = useState(null);
+
+    // Fetch projects on mount or when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            const fetchProjects = async () => {
+                try {
+                    const res = await api.get('/projects');
+                    setProjects(res.data);
+                    if (res.data.length > 0) {
+                        setSelectedProjectId(res.data[0].id);
+                    } else if (user?.role === 'admin') {
+                        // Auto-create project if none exist (fail-safe for legacy users)
+                        try {
+                            const createRes = await api.post('/projects', { name: 'General', description: 'Auto-created default project' });
+                            setProjects([createRes.data]);
+                            setSelectedProjectId(createRes.data.id);
+                        } catch (err) {
+                            console.error('Failed to auto-create project', err);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch projects', error);
+                }
+            };
+            fetchProjects();
+        }
+    }, [isOpen, user]);
 
     const handleCreateTask = async (e) => {
         e.preventDefault();
+        if (!selectedProjectId) {
+            alert('No project available. Please ask an admin to create a project first.');
+            return;
+        }
+
         try {
             await api.post('/tasks', {
                 ...newTask,
-                projectId: 1, // Default
+                projectId: selectedProjectId,
                 assigneeId: user?.id,
                 dueDate: newTask.dueDate || null
             });

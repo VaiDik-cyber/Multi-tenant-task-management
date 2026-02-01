@@ -1,24 +1,37 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { loginUser } from '../features/auth/authSlice';
+import axios from '../api/axios';
 import { motion } from 'framer-motion';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { Sparkles, CheckCircle, BarChart3 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const dispatch = useDispatch();
+const Register = () => {
+    const [formData, setFormData] = useState({
+        orgName: '',
+        username: '',
+        email: '',
+        password: ''
+    });
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { status, error } = useSelector((state) => state.auth);
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const resultAction = await dispatch(loginUser({ email, password }));
-        if (loginUser.fulfilled.match(resultAction)) {
-            navigate('/dashboard');
+        setLoading(true);
+        try {
+            await axios.post('/auth/register', formData);
+            toast.success('Registration successful! Please login.');
+            navigate('/login');
+        } catch (error) {
+            toast.error(error.response?.data?.error || 'Registration failed');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -55,10 +68,10 @@ const Login = () => {
                         transition={{ duration: 0.6 }}
                     >
                         <h1 style={{ fontSize: '3.5rem', fontWeight: 800, fontFamily: 'var(--font-display)', marginBottom: '24px', lineHeight: 1.1 }}>
-                            TaskFlow
+                            Join TaskFlow
                         </h1>
                         <p style={{ fontSize: '1.2rem', lineHeight: 1.6, opacity: 0.9, maxWidth: '500px', marginBottom: '40px' }}>
-                            A powerful, multi-tenant workspace for high-performance teams. Organize, track, and deliver with precision.
+                            Start managing your projects with efficiency and style. Create your organization today.
                         </p>
                     </motion.div>
 
@@ -102,31 +115,11 @@ const Login = () => {
                             </div>
                             <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>Visualize workflows</p>
                         </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.5 }}
-                            style={{
-                                background: 'rgba(255, 255, 255, 0.1)',
-                                backdropFilter: 'blur(10px)',
-                                padding: '20px',
-                                borderRadius: '16px',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                minWidth: '140px'
-                            }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                                <Sparkles size={24} />
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>AI Insights</h3>
-                            </div>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>Smart recommendations</p>
-                        </motion.div>
                     </div>
                 </div>
             </div>
 
-            {/* Right Side - Login Form */}
+            {/* Right Side - Register Form */}
             <div style={{
                 flex: 1,
                 display: 'flex',
@@ -136,36 +129,47 @@ const Login = () => {
                 background: '#ffffff'
             }}>
                 <div style={{ width: '100%', maxWidth: '400px' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                        <h2 style={{ fontSize: '2rem', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>Sign In</h2>
-                        <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Enter your credentials to access your workspace.</p>
+                    <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                        <h2 style={{ fontSize: '2rem', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>Create Account</h2>
+                        <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Setup your workspace in minutes.</p>
                     </div>
 
-                    {status === 'failed' && (
-                        <div style={{
-                            background: '#fef2f2', border: '1px solid #fee2e2', color: '#ef4444',
-                            padding: '12px', borderRadius: '8px', marginBottom: '24px', fontSize: '0.9rem', textAlign: 'center'
-                        }}>
-                            {error}
-                        </div>
-                    )}
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <Input
+                            label="Organization Name"
+                            name="orgName"
+                            placeholder="Acme Corp"
+                            value={formData.orgName}
+                            onChange={handleChange}
+                            required
+                        />
 
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <Input
+                            label="Username"
+                            name="username"
+                            placeholder="johndoe"
+                            value={formData.username}
+                            onChange={handleChange}
+                            required
+                        />
+
                         <Input
                             label="Email"
+                            name="email"
                             type="email"
                             placeholder="name@company.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={formData.email}
+                            onChange={handleChange}
                             required
                         />
 
                         <Input
                             label="Password"
+                            name="password"
                             type="password"
                             placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            value={formData.password}
+                            onChange={handleChange}
                             required
                         />
 
@@ -173,18 +177,18 @@ const Login = () => {
                             type="submit"
                             variant="primary"
                             style={{ width: '100%', padding: '12px', fontSize: '1rem', marginTop: '10px', background: '#4f46e5', borderColor: '#4f46e5' }}
-                            disabled={status === 'loading'}
+                            disabled={loading}
                         >
-                            {status === 'loading' ? 'Signing In...' : 'Sign In'}
+                            {loading ? 'Creating Account...' : 'Sign Up'}
                         </Button>
                     </form>
 
                     <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                        Don't have an account? <span
-                            onClick={() => navigate('/register')}
+                        Already have an account? <span
+                            onClick={() => navigate('/login')}
                             style={{ color: '#4f46e5', fontWeight: 600, cursor: 'pointer' }}
                         >
-                            Create one
+                            Log in
                         </span>
                     </p>
                 </div>
@@ -193,4 +197,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Register;

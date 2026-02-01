@@ -35,6 +35,12 @@ exports.register = async (req, res) => {
             [organizationId, username, email, hashedPassword, 'admin']
         );
 
+        // 3. Create Default Project ("General")
+        const [projectResult] = await connection.query(
+            'INSERT INTO projects (organization_id, name, description) VALUES (?, ?, ?)',
+            [organizationId, 'General', 'Default project for general tasks']
+        );
+
         await connection.commit();
 
         res.status(201).json({

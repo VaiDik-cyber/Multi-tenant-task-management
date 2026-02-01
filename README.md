@@ -37,6 +37,13 @@ Access the application at `http://localhost:5173`.
 -   **Email**: `admin@testorg.com`
 -   **Password**: `password123`
 
+## Security Features
+- **Multi-Tenancy**: Strict organization isolation via `organization_id` checks on every query.
+- **Authentication**: JWT-based stateless authentication.
+- **RBAC (Role-Based Access Control)**:
+    - **Admin**: Full access to projects, analytics, and all tasks.
+    - **Member**: Can only create tasks and update tasks assigned to them. Cannot delete resources.
+
 ## 📚 Documentation
 -   [DECISIONS.md](./DECISIONS.md): Why we chose MySQL (ACID) over MongoDB and Optimistic Locking vs Table Locking.
 -   [LIMITATIONS.md](./LIMITATIONS.md): Known limitations (Email Notifications, Refresh Tokens) and future roadmap.

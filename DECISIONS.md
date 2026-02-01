@@ -12,3 +12,14 @@
 **Why**:
 - **Performance**: Traditional "Table Locking" (or Pessimistic Locking) requires holding database connections open and blocking other transactions, which severely limits scalability. Optimistic Locking is stateless and non-blocking.
 - **User Experience**: It handles race conditions (e.g., two users editing the same task) by preventing "Last Write Wins" without freezing the UI.
+
+## 4. Role-Based Access Control (RBAC)
+We implemented a simple but strict RBAC system using Middleware and Resource-Level checks.
+
+### Why Middleware + Controller Logic?
+- **Middleware (`requireRole`)**: protecting entire routes (e.g., `DELETE /projects`) is cleanest at the router level.
+- **Controller Logic**: For granular permissions (e.g., "User can only update their own tasks"), we must check the resource owner inside the controller after fetching the data.
+
+### Roles
+- **Admin**: High-level management.
+- **Member**: Operational tasks only. strict "Least Privilege" enforcement.

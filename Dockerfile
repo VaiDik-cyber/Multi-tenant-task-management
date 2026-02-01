@@ -20,6 +20,7 @@ RUN npm install --production
 COPY config ./config
 COPY controllers ./controllers
 COPY middleware ./middleware
+COPY models ./models
 COPY routes ./routes
 COPY index.js ./
 

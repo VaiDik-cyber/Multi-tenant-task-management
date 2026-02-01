@@ -4,7 +4,7 @@ import { fetchTasks, moveTaskOptimistic, updateTaskStatus, rollbackTaskMove, del
 import { DndContext, closestCorners, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import KanbanColumn from './KanbanColumn';
 import KanbanTask from './KanbanTask';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 
 const KanbanBoard = () => {
     const dispatch = useDispatch();
@@ -49,7 +49,12 @@ const KanbanBoard = () => {
         dispatch(moveTaskOptimistic({ taskId, newStatus }));
 
         // 2. API Call with Revert capability
-        dispatch(updateTaskStatus({ taskId, status: newStatus, previousStatus, version: task.version }));
+        dispatch(updateTaskStatus({ taskId, status: newStatus, previousStatus, version: task.version }))
+            .unwrap()
+            .catch((payload) => {
+                // payload is the error object from rejectWithValue
+                toast.error(`Error: ${payload.error}`);
+            });
     };
 
     const columns = [
@@ -67,7 +72,14 @@ const KanbanBoard = () => {
 
     const confirmDelete = () => {
         if (taskToDelete) {
-            dispatch(deleteTask(taskToDelete.id));
+            dispatch(deleteTask(taskToDelete.id))
+                .unwrap()
+                .then(() => {
+                    toast.success('Task deleted successfully');
+                })
+                .catch((error) => {
+                    toast.error(`Failed to delete: ${error}`);
+                });
             setTaskToDelete(null);
         }
     };

@@ -6,6 +6,6 @@ const requireRole = require('../middleware/requireRole'); // Assuming requireRol
 
 router.use(authMiddleware);
 
-router.get('/', requireRole('admin'), analyticsController.getAnalytics);
+router.get('/', analyticsController.getAnalytics);
 
 module.exports = router;

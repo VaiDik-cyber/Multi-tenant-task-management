@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/axios';
-import { toast } from 'react-hot-toast';
+// toast removed from here to keep reducers pure
 
 // Async thunk to fetch tasks
 export const fetchTasks = createAsyncThunk(
@@ -87,7 +87,6 @@ const tasksSlice = createSlice({
             .addCase(fetchTasks.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.payload;
-                toast.error('Failed to load tasks');
             })
             // Update Status (Optimistic Handling)
             .addCase(updateTaskStatus.rejected, (state, action) => {
@@ -97,12 +96,10 @@ const tasksSlice = createSlice({
                 if (task) {
                     task.status = previousStatus;
                 }
-                toast.error(`Update failed: ${error}`);
             })
             // Delete Task
             .addCase(deleteTask.fulfilled, (state, action) => {
                 state.items = state.items.filter((task) => task.id !== action.payload);
-                toast.success('Task deleted successfully');
             });
     },
 });

@@ -52,7 +52,8 @@ app.get('/health', async (req, res) => {
 if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
   app.use(express.static(path.join(__dirname, 'client/dist')));
 
-  app.get('*', (req, res) => {
+  // Use (.*) for wildcard compatibility with newer path-to-regexp
+  app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, 'client/dist', 'index.html'));
   });
 }

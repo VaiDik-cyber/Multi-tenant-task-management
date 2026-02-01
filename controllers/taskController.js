@@ -107,10 +107,17 @@ exports.updateStatus = async (req, res) => {
         await connection.beginTransaction();
 
         // Optimistic Locking Update
-        const [result] = await connection.query(
-            'UPDATE tasks SET status = ?, version = version + 1 WHERE id = ? AND organization_id = ? AND version = ?',
-            [status, id, organizationId, version]
-        );
+        let query = 'UPDATE tasks SET status = ?, version = version + 1';
+        const params = [status];
+
+        if (status === 'done') {
+            query += ', completed_at = NOW()';
+        }
+
+        query += ' WHERE id = ? AND organization_id = ? AND version = ?';
+        params.push(id, organizationId, version);
+
+        const [result] = await connection.query(query, params);
 
         if (result.affectedRows === 0) {
             await connection.rollback();

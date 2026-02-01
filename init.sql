@@ -48,6 +48,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     description TEXT,
     status ENUM('todo', 'in_progress', 'review', 'done') DEFAULT 'todo',
     priority ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',
+    due_date DATETIME,
+    completed_at DATETIME,
     version INT DEFAULT 1, -- For optimistic locking
     deleted_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

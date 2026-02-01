@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 // Import DB config (so it initializes pool) - optional since models import it, 
 // but good to ensure env vars are checked early or similar. 
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/projects', projectRoutes);
 app.use('/tasks', taskRoutes);
+app.use('/analytics', analyticsRoutes);
 
 // Health check uses the new db import
 app.get('/', (req, res) => {

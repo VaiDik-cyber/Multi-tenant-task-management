@@ -29,9 +29,12 @@ app.use('/tasks', taskRoutes);
 app.use('/analytics', analyticsRoutes);
 
 // Health check uses the new db import
+/* 
+// Removed root route to allow React Frontend to be served at /
 app.get('/', (req, res) => {
   res.send('Multi-tenant Task Management Backend is running!');
 });
+*/
 
 app.get('/health', async (req, res) => {
   try {

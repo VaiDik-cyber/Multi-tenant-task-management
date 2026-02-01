@@ -4,33 +4,38 @@ import clsx from 'clsx';
 
 const Button = ({ children, variant = 'primary', className, ...props }) => {
     const baseStyles = {
-        padding: '12px 24px',
-        borderRadius: '12px',
+        padding: '10px 20px', // More compact
+        borderRadius: '8px', // Tighter radius
         border: 'none',
         cursor: 'pointer',
-        fontSize: '1rem',
-        fontWeight: '600',
+        fontSize: '0.95rem',
+        fontWeight: '500', // Slightly lighter weight
         fontFamily: 'var(--font-display)',
         position: 'relative',
         overflow: 'hidden',
-        transition: 'all 0.3s ease',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', // Smoother transition
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px'
     };
 
     const variants = {
         primary: {
             background: 'var(--primary)',
             color: 'white',
-            boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1)', // Colored shadow
-            border: '1px solid var(--primary)', // Ensure crisp edges
+            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // Subtle shadow
+            border: '1px solid transparent',
         },
         ghost: {
             background: 'transparent',
             color: 'var(--text-secondary)',
-            border: '1px solid var(--border-subtle)',
+            border: '1px solid transparent', // Changed to transparent for cleaner look
         },
         danger: {
-            background: 'var(--danger)',
-            color: 'white',
+            background: '#fee2e2', // Light red background
+            color: '#ef4444', // Red text
+            border: '1px solid #fecaca',
         }
     };
 

@@ -85,3 +85,54 @@ exports.login = async (req, res) => {
         res.status(500).json({ error: 'Login failed' });
     }
 };
+
+exports.createUser = async (req, res) => {
+    const { username, email, password, role } = req.body;
+    const { organizationId } = req.user;
+
+    if (!username || !email || !password) {
+        return res.status(400).json({ error: 'Username, email, and password are required' });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Ensure role is valid, default to user if not provided or invalid
+        const validRoles = ['admin', 'user'];
+        const userRole = validRoles.includes(role) ? role : 'user';
+
+        const [result] = await db.query(
+            'INSERT INTO users (organization_id, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+            [organizationId, username, email, hashedPassword, userRole]
+        );
+
+        res.status(201).json({
+            message: 'User created successfully',
+            userId: result.insertId,
+            username,
+            email,
+            role: userRole
+        });
+    } catch (error) {
+        console.error('Create User Error:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Email already exists' });
+        }
+        res.status(500).json({ error: 'Failed to create user' });
+    }
+};
+
+exports.listUsers = async (req, res) => {
+    const { organizationId } = req.user;
+
+    try {
+        const [users] = await db.query(
+            'SELECT id, username, email, role, created_at FROM users WHERE organization_id = ? ORDER BY created_at DESC',
+            [organizationId]
+        );
+        res.json(users);
+    } catch (error) {
+        console.error('List Users Error:', error);
+        res.status(500).json({ error: 'Failed to list users' });
+    }
+};

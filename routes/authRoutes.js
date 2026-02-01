@@ -5,4 +5,12 @@ const authController = require('../controllers/authController');
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 
+// Authenticated Routes
+const authMiddleware = require('../middleware/authMiddleware');
+const requireRole = require('../middleware/requireRole');
+
+router.use('/users', authMiddleware);
+router.post('/users', requireRole('admin'), authController.createUser);
+router.get('/users', requireRole('admin'), authController.listUsers);
+
 module.exports = router;

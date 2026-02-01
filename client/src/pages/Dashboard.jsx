@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import Layout from '../components/layout/Layout';
 import Sidebar from '../components/layout/Sidebar';
 import Card from '../components/ui/Card';
 import api from '../api/axios';
@@ -41,6 +42,11 @@ const Dashboard = () => {
     const [newTask, setNewTask] = useState({ title: '', description: '', priority: 'medium' });
 
     useEffect(() => {
+        if (user?.role !== 'admin') {
+            setLoading(false);
+            return;
+        }
+
         const fetchAnalytics = async () => {
             try {
                 const response = await api.get('/analytics');
@@ -52,7 +58,7 @@ const Dashboard = () => {
             }
         };
         fetchAnalytics();
-    }, []);
+    }, [user]);
 
     const handleCreateTask = async (e) => {
         e.preventDefault();
@@ -71,67 +77,62 @@ const Dashboard = () => {
     };
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh' }}>
-            <Sidebar />
-            <main style={{ marginLeft: '260px', flex: 1, padding: '40px' }}>
-
-                {/* Header ... (Same) */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                    <div>
-                        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 700 }}>
-                            Dashboard
-                        </h1>
-                        <p style={{ color: 'var(--text-muted)' }}>Welcome back, {user?.username || 'Admin'}</p>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                            {user?.username?.[0].toUpperCase() || 'A'}
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Stats Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-                    <StatCard
-                        icon={CheckCircle}
-                        label="Total Completed"
-                        value={analytics?.tasksCompletedPerUser?.[0]?.completed_count || 0}
-                        color="16, 185, 129"
-                        delay={0.1}
-                    />
-                    <StatCard
-                        icon={Clock}
-                        label="Avg Completion (Hrs)"
-                        value={parseFloat(analytics?.avgCompletionTime || 0).toFixed(1)}
-                        color="99, 102, 241"
-                        delay={0.2}
-                    />
-                    <StatCard
-                        icon={Layers}
-                        label="Overdue Tasks"
-                        value={analytics?.overdueTasksCount || 0}
-                        color="239, 68, 68"
-                        delay={0.3}
-                    />
+        <Layout>
+            {/* Header ... (Same) */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            >
+                <div>
+                    <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 700 }}>
+                        Dashboard
+                    </h1>
+                    <p style={{ color: 'var(--text-muted)' }}>Welcome back, {user?.username || 'Admin'}</p>
                 </div>
-
-                {/* Recent Activity Section */}
-                <Card delay={0.4}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Analytics Overview</h3>
-                        <BarChart3 size={20} color="var(--text-muted)" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                        {user?.username?.[0].toUpperCase() || 'A'}
                     </div>
-                    <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
-                        Chart visualization would go here
-                    </div>
-                </Card>
+                </div>
+            </motion.div>
 
-            </main>
-        </div>
+            {/* Stats Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+                <StatCard
+                    icon={CheckCircle}
+                    label="Total Completed"
+                    value={analytics?.tasksCompletedPerUser?.[0]?.completed_count || 0}
+                    color="16, 185, 129"
+                    delay={0.1}
+                />
+                <StatCard
+                    icon={Clock}
+                    label="Avg Completion (Hrs)"
+                    value={parseFloat(analytics?.avgCompletionTime || 0).toFixed(1)}
+                    color="99, 102, 241"
+                    delay={0.2}
+                />
+                <StatCard
+                    icon={Layers}
+                    label="Overdue Tasks"
+                    value={analytics?.overdueTasksCount || 0}
+                    color="239, 68, 68"
+                    delay={0.3}
+                />
+            </div>
+
+            {/* Recent Activity Section */}
+            <Card delay={0.4}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Analytics Overview</h3>
+                    <BarChart3 size={20} color="var(--text-muted)" />
+                </div>
+                <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                    Chart visualization would go here
+                </div>
+            </Card>
+        </Layout>
     );
 };
 

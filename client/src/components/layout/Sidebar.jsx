@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { LayoutDashboard, CheckSquare, LogOut } from 'lucide-react';
-import { useDispatch } from 'react-redux';
+import { LayoutDashboard, CheckSquare, LogOut, Users } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../../features/auth/authSlice';
 
@@ -8,6 +8,7 @@ const Sidebar = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useSelector((state) => state.auth);
 
     const handleLogout = () => {
         dispatch(logout());
@@ -18,6 +19,10 @@ const Sidebar = () => {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
         { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
     ];
+
+    if (user?.role === 'admin') {
+        menuItems.push({ icon: Users, label: 'Team', path: '/users' });
+    }
 
     return (
         <div style={{

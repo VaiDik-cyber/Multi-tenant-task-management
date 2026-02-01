@@ -5,7 +5,7 @@ COPY client/package*.json ./
 RUN npm install
 COPY client/ ./
 # Set API URL to empty string for relative paths (same origin)
-ENV VITE_API_URL=""
+ENV VITE_API_URL="/"
 RUN npm run build
 
 # Stage 2: Setup Production Server

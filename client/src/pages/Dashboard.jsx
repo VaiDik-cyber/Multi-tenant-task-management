@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import Sidebar from '../components/layout/Sidebar';
 import Card from '../components/ui/Card';
+import KanbanBoard from '../components/kanban/KanbanBoard';
 import api from '../api/axios';
 import { Layers, Clock, CheckCircle, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -109,6 +110,12 @@ const Dashboard = () => {
                         Chart visualization would go here
                     </div>
                 </Card>
+
+                {/* Kanban Board Section */}
+                <div style={{ marginTop: '40px' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '20px', fontFamily: 'var(--font-display)' }}>Task Board</h3>
+                    <KanbanBoard />
+                </div>
 
             </main>
         </div>

@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const authRoutes = require('./routes/authRoutes');
@@ -44,6 +45,17 @@ app.get('/health', async (req, res) => {
 
 
 
+// Serve React App (Production)
+if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+  app.use(express.static(path.join(__dirname, 'client/dist')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/dist', 'index.html'));
+  });
+}
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+module.exports = app;

@@ -8,7 +8,9 @@ import { Toaster, toast } from 'react-hot-toast';
 
 const KanbanBoard = () => {
     const dispatch = useDispatch();
-    const { items: tasks } = useSelector((state) => state.tasks);
+    const { items } = useSelector((state) => state.tasks);
+    // Defensive check: Ensure tasks is an array to prevent crashes if API returns unexpected data
+    const tasks = Array.isArray(items) ? items : [];
 
     useEffect(() => {
         dispatch(fetchTasks());

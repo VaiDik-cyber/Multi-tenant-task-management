@@ -7,6 +7,7 @@ router.use(authMiddleware); // Protect all routes
 
 router.post('/', taskController.create);
 router.get('/', taskController.list);
+router.put('/:id/status', taskController.updateStatus);
 router.delete('/:id', taskController.delete);
 
 module.exports = router;

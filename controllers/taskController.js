@@ -86,3 +86,66 @@ exports.delete = async (req, res) => {
         res.status(500).json({ error: 'Failed to delete task' });
     }
 };
+
+exports.updateStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status, version } = req.body;
+    const { organizationId, userId } = req.user;
+
+    if (!status || version === undefined) {
+        return res.status(400).json({ error: 'Status and version are required' });
+    }
+
+    const validStatuses = ['todo', 'in_progress', 'review', 'done'];
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        // Optimistic Locking Update
+        const [result] = await connection.query(
+            'UPDATE tasks SET status = ?, version = version + 1 WHERE id = ? AND organization_id = ? AND version = ?',
+            [status, id, organizationId, version]
+        );
+
+        if (result.affectedRows === 0) {
+            await connection.rollback();
+            // Check if task exists to distinguish between 404 (not found) and 409 (conflict)
+            const [task] = await connection.query(
+                'SELECT version FROM tasks WHERE id = ? AND organization_id = ?',
+                [id, organizationId]
+            );
+
+            if (task.length === 0) {
+                return res.status(404).json({ error: 'Task not found' });
+            }
+
+            return res.status(409).json({ error: 'Task has been modified by another user. Please refresh and try again.' });
+        }
+
+        // Log Activity
+        await connection.query(
+            'INSERT INTO activity_logs (organization_id, user_id, entity_type, entity_id, action, details) VALUES (?, ?, ?, ?, ?, ?)',
+            [organizationId, userId, 'task', id, 'status_updated', JSON.stringify({ oldVersion: version, newStatus: status })]
+        );
+
+        await connection.commit();
+
+        res.json({
+            message: 'Task status updated successfully',
+            status,
+            version: version + 1
+        });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Update Task Status Error:', error);
+        res.status(500).json({ error: 'Failed to update task status' });
+    } finally {
+        connection.release();
+    }
+};

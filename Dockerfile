@@ -11,6 +11,7 @@ RUN npm run build
 # Stage 2: Setup Production Server
 FROM node:18-alpine
 WORKDIR /app
+ENV NODE_ENV=production
 
 # Install Backend Dependencies
 COPY package*.json ./

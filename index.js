@@ -57,7 +57,7 @@ if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
   });
 }
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
 });
 

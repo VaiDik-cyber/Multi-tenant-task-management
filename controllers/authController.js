@@ -35,13 +35,21 @@ exports.register = async (req, res) => {
             [organizationId, username, email, hashedPassword, 'admin']
         );
 
-        // 3. Create Default Project ("General")
-        const [projectResult] = await connection.query(
-            'INSERT INTO projects (organization_id, name, description) VALUES (?, ?, ?)',
-            [organizationId, 'General', 'Default project for general tasks']
-        );
-
         await connection.commit();
+
+        // 3. Create Default Project ("General") - Non-blocking
+        // We do this after commit so that if it fails (e.g. missing table on old schema),
+        // the user is still created and can login.
+        try {
+            await connection.query(
+                'INSERT INTO projects (organization_id, name, description) VALUES (?, ?, ?)',
+                [organizationId, 'General', 'Default project for general tasks']
+            );
+        } catch (projError) {
+            console.error('Failed to auto-create default project:', projError.message);
+            // We ignore this error to prevent 500 on registration.
+            // The frontend has fallback logic to handle missing projects.
+        }
 
         res.status(201).json({
             message: 'Organization and Admin user created successfully',

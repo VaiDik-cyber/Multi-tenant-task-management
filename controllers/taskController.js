@@ -25,8 +25,8 @@ exports.create = async (req, res) => {
         }
 
         const [result] = await connection.query(
-            'INSERT INTO tasks (organization_id, project_id, title, description, priority, assignee_id, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [organizationId, projectId, title, description, priority || 'medium', assigneeId || null, req.body.dueDate || null]
+            'INSERT INTO tasks (organization_id, project_id, title, description, priority, assignee_id, created_by, due_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [organizationId, projectId, title, description, priority || 'medium', assigneeId || null, req.user.userId, req.body.dueDate || null]
         );
 
         const newTaskId = result.insertId;
@@ -158,10 +158,10 @@ exports.updateStatus = async (req, res) => {
         query += ' WHERE id = ? AND organization_id = ? AND version = ?';
         params.push(id, organizationId, version);
 
-        // RBAC: Members can only update their own tasks
+        // RBAC: Members can only update tasks if they are Assignee OR Creator
         if (req.user.role !== 'admin') {
-            query += ' AND assignee_id = ?';
-            params.push(userId);
+            query += ' AND (assignee_id = ? OR created_by = ?)';
+            params.push(userId, userId);
         }
 
         const [result] = await connection.query(query, params);
@@ -170,7 +170,7 @@ exports.updateStatus = async (req, res) => {
             await connection.rollback();
             // Check if task exists to distinguish between 404 (not found), 403 (access denied), and 409 (conflict)
             const [task] = await connection.query(
-                'SELECT version, assignee_id FROM tasks WHERE id = ? AND organization_id = ?',
+                'SELECT version, assignee_id, created_by FROM tasks WHERE id = ? AND organization_id = ?',
                 [id, organizationId]
             );
 
@@ -178,9 +178,9 @@ exports.updateStatus = async (req, res) => {
                 return res.status(404).json({ error: 'Task not found' });
             }
 
-            // If user is not admin and not assignee
-            if (req.user.role !== 'admin' && task[0].assignee_id !== userId) {
-                return res.status(403).json({ error: 'Access denied. You can only update tasks assigned to you.' });
+            // If user is not admin, not assignee, and not creator
+            if (req.user.role !== 'admin' && task[0].assignee_id !== userId && task[0].created_by !== userId) {
+                return res.status(403).json({ error: 'Access denied. You can only update tasks assigned to you or created by you.' });
             }
 
             return res.status(409).json({ error: 'Task has been modified by another user. Please refresh and try again.' });

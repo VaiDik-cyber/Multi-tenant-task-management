@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     organization_id INT NOT NULL,
     project_id INT NOT NULL,
     assignee_id INT NULL,
+    created_by INT NULL, -- Track who created the task
     title VARCHAR(255) NOT NULL,
     description TEXT,
     status ENUM('todo', 'in_progress', 'review', 'done') DEFAULT 'todo',
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     FOREIGN KEY (assignee_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_tasks_org (organization_id),
     INDEX idx_tasks_project (project_id),
     INDEX idx_tasks_status (status),

@@ -11,6 +11,6 @@ const requireRole = require('../middleware/requireRole');
 
 router.use('/users', authMiddleware);
 router.post('/users', requireRole('admin'), authController.createUser);
-router.get('/users', requireRole('admin'), authController.listUsers);
+router.get('/users', authController.listUsers); // Allow all members to list users (for assignment)
 
 module.exports = router;

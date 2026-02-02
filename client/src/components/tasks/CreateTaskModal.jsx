@@ -4,39 +4,44 @@ import api from '../../api/axios';
 const CreateTaskModal = ({ isOpen, onClose, user, onTaskCreated }) => {
     const [newTask, setNewTask] = useState({ title: '', description: '', priority: 'medium', dueDate: '' });
     const [projects, setProjects] = useState([]);
+    const [usersList, setUsersList] = useState([]);
     const [selectedProjectId, setSelectedProjectId] = useState(null);
 
-    // Fetch projects on mount or when modal opens
+    // Fetch projects and users on mount
     useEffect(() => {
         if (isOpen) {
-            const fetchProjects = async () => {
+            const fetchData = async () => {
                 try {
-                    const res = await api.get('/projects');
-                    setProjects(res.data);
-                    if (res.data.length > 0) {
-                        setSelectedProjectId(res.data[0].id);
+                    const [projRes, usersRes] = await Promise.all([
+                        api.get('/projects'),
+                        api.get('/auth/users')
+                    ]);
+
+                    setProjects(projRes.data);
+                    setUsersList(usersRes.data);
+
+                    if (projRes.data.length > 0) {
+                        setSelectedProjectId(projRes.data[0].id);
                     } else if (user?.role === 'admin') {
-                        // Auto-create project if none exist (fail-safe for legacy users)
+                        // Auto-create logic...
                         try {
                             const createRes = await api.post('/projects', { name: 'General', description: 'Auto-created default project' });
                             setProjects([createRes.data]);
                             setSelectedProjectId(createRes.data.id);
-                        } catch (err) {
-                            console.error('Failed to auto-create project', err);
-                        }
+                        } catch (err) { console.error(err); }
                     }
                 } catch (error) {
-                    console.error('Failed to fetch projects', error);
+                    console.error('Failed to fetch data', error);
                 }
             };
-            fetchProjects();
+            fetchData();
         }
     }, [isOpen, user]);
 
     const handleCreateTask = async (e) => {
         e.preventDefault();
         if (!selectedProjectId) {
-            alert('No project available. Please ask an admin to create a project first.');
+            alert('No project available.');
             return;
         }
 
@@ -44,16 +49,18 @@ const CreateTaskModal = ({ isOpen, onClose, user, onTaskCreated }) => {
             await api.post('/tasks', {
                 ...newTask,
                 projectId: selectedProjectId,
-                assigneeId: user?.id,
+                // If assigneeId is empty string from select, send null. defaulting to current user if not selected is OPTIONAL, 
+                // but usually better to let them explicitly choose "Me" or "Someone else". 
+                // Let's default to creating user if not specified? Or let select handle it.
+                // The select value will be mapped to newTask state or a separate state.
+                assigneeId: newTask.assigneeId || user?.id,
                 dueDate: newTask.dueDate || null
             });
-            setNewTask({ title: '', description: '', priority: 'medium', dueDate: '' });
+            // ... reset logic
+            setNewTask({ title: '', description: '', priority: 'medium', dueDate: '', assigneeId: '' });
             onClose();
-            if (onTaskCreated) {
-                onTaskCreated();
-            } else {
-                window.location.reload();
-            }
+            if (onTaskCreated) onTaskCreated();
+            else window.location.reload();
         } catch (error) {
             alert('Failed to create task');
         }
@@ -111,6 +118,23 @@ const CreateTaskModal = ({ isOpen, onClose, user, onTaskCreated }) => {
                                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
                             />
                         </div>
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', fontWeight: 500 }}>Assign To</label>
+                        <select
+                            value={newTask.assigneeId || ''}
+                            onChange={(e) => setNewTask({ ...newTask, assigneeId: e.target.value })}
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white' }}
+                        >
+                            <option value="">Me ({user?.username})</option>
+                            {usersList.filter(u => u.id !== user?.id).map(u => (
+                                <option key={u.id} value={u.id}>{u.username} ({u.role})</option>
+                            ))}
+                        </select>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '6px' }}>
+                            ⓘ This task can be updated by <strong>Admins</strong>, the <strong>Creator</strong> (You), and the <strong>Assignee</strong>.
+                        </p>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
                         <button type="button" onClick={onClose} style={{ padding: '10px 16px', borderRadius: '8px', background: 'transparent', border: '1px solid #e2e8f0', cursor: 'pointer', fontWeight: 500 }}>Cancel</button>
